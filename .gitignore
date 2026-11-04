@@ -1,0 +1,27 @@
+# Données générées (se régénèrent avec producer.py)
+data/trips_history.jsonl
+*.parquet
+minio-data/
+kafka-data/
+checkpoints/
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Python / Jupyter
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Rapport : on ne versionne que le PDF final
+report/*.docx
+report/~$*
+
+# Divers
+.env
+.DS_Store
+Thumbs.db
+*.jar
+.idea/
+.vscode/

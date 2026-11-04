@@ -1,0 +1,4 @@
+# Scripts shell exécutés dans les conteneurs Linux : toujours en LF (même depuis Windows)
+*.py text eol=lf
+*.scala text eol=lf
+*.yml text eol=lf
