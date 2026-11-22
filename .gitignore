@@ -1,5 +1,6 @@
 # Données générées (se régénèrent avec producer.py)
 data/trips_history.jsonl
+data/p3_explain.txt
 *.parquet
 minio-data/
 kafka-data/
@@ -14,9 +15,16 @@ __pycache__/
 .venv/
 venv/
 
-# Rapport : on ne versionne que le PDF final
+# Rapport : on versionne rapport.tex et le PDF final, pas les fichiers de compilation
 report/*.docx
 report/~$*
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
 
 # Divers
 .env

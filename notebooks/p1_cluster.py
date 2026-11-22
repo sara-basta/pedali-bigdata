@@ -1,7 +1,7 @@
 """Partie 1 - Mise en place du cluster et positionnement.
 
 Lancement :
-    docker exec -it jupyter spark-submit notebooks/p1_cluster.py
+    docker exec -it jupyter python notebooks/p1_cluster.py
 """
 import time
 

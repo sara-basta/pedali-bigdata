@@ -1,11 +1,13 @@
 """Partie 2 - Traitement batch avec SparkCore (RDD).
 
 Prérequis :
-    python producer/producer.py --mode file --n 50000
-    puis copier trips_history.jsonl dans lake/bronze/history/ (console MinIO ou mc cp)
+    docker exec -it jupyter python producer/gen_fake_history.py --n 50000
+    (ou producer.py --mode file --n 50000), puis copier trips_history.jsonl dans
+    lake/bronze/history/ : docker exec -it jupyter python producer/upload_to_minio.py
 
-Lancement :
-    docker exec -it jupyter spark-submit notebooks/p2_rdd.py
+Lancement (python et non spark-submit : spark.jars.packages, défini dans get_spark,
+n'est pris en compte que si c'est PySpark qui démarre la JVM ; sinon S3A est introuvable) :
+    docker exec -it jupyter python notebooks/p2_rdd.py
 """
 import json
 import time

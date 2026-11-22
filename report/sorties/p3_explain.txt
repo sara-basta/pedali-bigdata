@@ -1,0 +1,43 @@
+== Parsed Logical Plan ==
+'Aggregate ['city, 'zone_type], ['city, 'zone_type, count(1) AS nb_trajets#3961L]
++- Join LeftOuter, (start_station#4 = station_id#42)
+   :- Filter (status#7 = ENDED)
+   :  +- Project [trip_id#0, user_id#1, vehicle_id#2, vehicle_type#3, start_station#4, end_station#5, city#6, status#7, duration_s#8, distance_km#9, battery_pct#10, price_mad#11, event_time#12, to_timestamp(event_time#12, None, TimestampType, Some(Etc/UTC), false) AS event_ts#26]
+   :     +- Relation [trip_id#0,user_id#1,vehicle_id#2,vehicle_type#3,start_station#4,end_station#5,city#6,status#7,duration_s#8,distance_km#9,battery_pct#10,price_mad#11,event_time#12] json
+   +- Project [station_id#42, district#45, zone_type#46, capacity#47]
+      +- Relation [station_id#42,name#43,city#44,district#45,zone_type#46,capacity#47,latitude#48,longitude#49] json
+
+== Analyzed Logical Plan ==
+city: string, zone_type: string, nb_trajets: bigint
+Aggregate [city#6, zone_type#46], [city#6, zone_type#46, count(1) AS nb_trajets#3961L]
++- Join LeftOuter, (start_station#4 = station_id#42)
+   :- Filter (status#7 = ENDED)
+   :  +- Project [trip_id#0, user_id#1, vehicle_id#2, vehicle_type#3, start_station#4, end_station#5, city#6, status#7, duration_s#8, distance_km#9, battery_pct#10, price_mad#11, event_time#12, to_timestamp(event_time#12, None, TimestampType, Some(Etc/UTC), false) AS event_ts#26]
+   :     +- Relation [trip_id#0,user_id#1,vehicle_id#2,vehicle_type#3,start_station#4,end_station#5,city#6,status#7,duration_s#8,distance_km#9,battery_pct#10,price_mad#11,event_time#12] json
+   +- Project [station_id#42, district#45, zone_type#46, capacity#47]
+      +- Relation [station_id#42,name#43,city#44,district#45,zone_type#46,capacity#47,latitude#48,longitude#49] json
+
+== Optimized Logical Plan ==
+Aggregate [city#6, zone_type#46], [city#6, zone_type#46, count(1) AS nb_trajets#3961L]
++- Project [city#6, zone_type#46]
+   +- Join LeftOuter, (start_station#4 = station_id#42)
+      :- Project [start_station#4, city#6]
+      :  +- Filter (isnotnull(status#7) AND (status#7 = ENDED))
+      :     +- Relation [trip_id#0,user_id#1,vehicle_id#2,vehicle_type#3,start_station#4,end_station#5,city#6,status#7,duration_s#8,distance_km#9,battery_pct#10,price_mad#11,event_time#12] json
+      +- Project [station_id#42, zone_type#46]
+         +- Filter isnotnull(station_id#42)
+            +- Relation [station_id#42,name#43,city#44,district#45,zone_type#46,capacity#47,latitude#48,longitude#49] json
+
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[city#6, zone_type#46], functions=[count(1)], output=[city#6, zone_type#46, nb_trajets#3961L])
+   +- Exchange hashpartitioning(city#6, zone_type#46, 200), ENSURE_REQUIREMENTS, [plan_id=1159]
+      +- HashAggregate(keys=[city#6, zone_type#46], functions=[partial_count(1)], output=[city#6, zone_type#46, count#3966L])
+         +- Project [city#6, zone_type#46]
+            +- BroadcastHashJoin [start_station#4], [station_id#42], LeftOuter, BuildRight, false
+               :- Project [start_station#4, city#6]
+               :  +- Filter (isnotnull(status#7) AND (status#7 = ENDED))
+               :     +- FileScan json [start_station#4,city#6,status#7] Batched: false, DataFilters: [isnotnull(status#7), (status#7 = ENDED)], Format: JSON, Location: InMemoryFileIndex(1 paths)[s3a://lake/bronze/history/trips_history.jsonl], PartitionFilters: [], PushedFilters: [IsNotNull(status), EqualTo(status,ENDED)], ReadSchema: struct<start_station:string,city:string,status:string>
+               +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, false]),false), [plan_id=1154]
+                  +- Filter isnotnull(station_id#42)
+                     +- FileScan json [station_id#42,zone_type#46] Batched: false, DataFilters: [isnotnull(station_id#42)], Format: JSON, Location: InMemoryFileIndex(1 paths)[file:/opt/pedali/data/stations.json], PartitionFilters: [], PushedFilters: [IsNotNull(station_id)], ReadSchema: struct<station_id:string,zone_type:string>

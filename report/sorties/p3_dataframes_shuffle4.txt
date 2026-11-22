@@ -1,0 +1,160 @@
+============================================================
+root
+ |-- trip_id: string (nullable = true)
+ |-- user_id: string (nullable = true)
+ |-- vehicle_id: string (nullable = true)
+ |-- vehicle_type: string (nullable = true)
+ |-- start_station: string (nullable = true)
+ |-- end_station: string (nullable = true)
+ |-- city: string (nullable = true)
+ |-- status: string (nullable = true)
+ |-- duration_s: integer (nullable = true)
+ |-- distance_km: double (nullable = true)
+ |-- battery_pct: integer (nullable = true)
+ |-- price_mad: double (nullable = true)
+ |-- event_time: string (nullable = true)
+ |-- event_ts: timestamp (nullable = true)
+
+[  9.02 s] count(raw)
+Lignes lues : 51000
+Stations    : 400
+[  5.41 s] count(ended)
+Trajets ENDED : 14370
+[  1.33 s] CA par ville (DataFrame)
+
+Chiffre d'affaires par ville - API DataFrame
+  Casablanca     192,559.97
+  Marrakech       83,975.32
+  Rabat           86,641.49
+  Tanger          66,386.47
+[  1.24 s] CA par ville (SQL)
+
+Chiffre d'affaires par ville - SQL
+  Casablanca     192,559.97
+  Marrakech       83,975.32
+  Rabat           86,641.49
+  Tanger          66,386.47
+[  1.34 s] Durée moyenne ville x véhicule (DataFrame)
+
+Durée moyenne d'un trajet (secondes)
+  Casablanca   BIKE       1154.2
+  Casablanca   EBIKE      1151.5
+  Casablanca   SCOOTER    1143.9
+  Marrakech    BIKE       1101.7
+  Marrakech    EBIKE      1163.1
+  Marrakech    SCOOTER    1135.1
+  Rabat        BIKE       1147.8
+  Rabat        EBIKE      1142.3
+  Rabat        SCOOTER    1125.3
+  Tanger       BIKE       1190.1
+  Tanger       EBIKE      1178.2
+  Tanger       SCOOTER    1142.6
+[  1.03 s] Top 5 stations (DataFrame)
+
+Top 5 des stations de départ
+  S-CAS-001       269 trajets
+  S-CAS-003       250 trajets
+  S-CAS-002       238 trajets
+  S-CAS-004       232 trajets
+  S-CAS-005       232 trajets
+[  1.99 s] Jointure + agrégat par zone
+
+Trajets et CA par ville et type de zone
+  Casablanca   résidentiel            3077    91,500.94
+  Casablanca   centre d'affaires      1021    30,890.19
+  Casablanca   plage                   804    24,031.51
+  Casablanca   gare                    540    16,032.79
+  Casablanca   tourisme                506    15,416.50
+  Casablanca   université              499    14,688.04
+  Marrakech    résidentiel            1069    31,570.58
+  Marrakech    centre d'affaires       683    20,671.57
+  Marrakech    tourisme                353    10,497.31
+  Marrakech    gare                    297     9,126.66
+  Marrakech    université              246     7,002.20
+  Marrakech    plage                   165     5,107.00
+  Rabat        résidentiel             706    20,322.50
+  Rabat        tourisme                545    16,008.77
+  Rabat        gare                    503    15,057.06
+  Rabat        centre d'affaires       465    14,288.53
+  Rabat        plage                   394    11,879.04
+  Rabat        université              305     9,085.59
+  Tanger       résidentiel            1009    29,846.25
+  Tanger       centre d'affaires       428    12,863.28
+  Tanger       gare                    288     8,814.32
+  Tanger       université              191     5,940.06
+  Tanger       tourisme                173     5,315.70
+  Tanger       plage                   103     3,606.86
+Trajets sans station correspondante : 0
+[  2.51 s] Répartition trip_band (UDF Python)
+[  0.61 s] Répartition trip_band (when/otherwise)
+
+Répartition par tranche de durée
+  UDF            : [('court', 2580), ('long', 2006), ('moyen', 9784)]
+  when/otherwise : [('court', 2580), ('long', 2006), ('moyen', 9784)]
+[  8.92 s] Écriture Silver Parquet (partitionBy city)
+
+Silver écrit dans s3a://lake/silver/trips_history : 50000 lignes
+
+============================================================
+explain(True) : jointure trajets ENDED x stations
+============================================================
+== Parsed Logical Plan ==
+'Aggregate ['city, 'zone_type], ['city, 'zone_type, count(1) AS nb_trajets#3961L]
++- Join LeftOuter, (start_station#4 = station_id#42)
+   :- Filter (status#7 = ENDED)
+   :  +- Project [trip_id#0, user_id#1, vehicle_id#2, vehicle_type#3, start_station#4, end_station#5, city#6, status#7, duration_s#8, distance_km#9, battery_pct#10, price_mad#11, event_time#12, to_timestamp(event_time#12, None, TimestampType, Some(Etc/UTC), false) AS event_ts#26]
+   :     +- Relation [trip_id#0,user_id#1,vehicle_id#2,vehicle_type#3,start_station#4,end_station#5,city#6,status#7,duration_s#8,distance_km#9,battery_pct#10,price_mad#11,event_time#12] json
+   +- Project [station_id#42, district#45, zone_type#46, capacity#47]
+      +- Relation [station_id#42,name#43,city#44,district#45,zone_type#46,capacity#47,latitude#48,longitude#49] json
+
+== Analyzed Logical Plan ==
+city: string, zone_type: string, nb_trajets: bigint
+Aggregate [city#6, zone_type#46], [city#6, zone_type#46, count(1) AS nb_trajets#3961L]
++- Join LeftOuter, (start_station#4 = station_id#42)
+   :- Filter (status#7 = ENDED)
+   :  +- Project [trip_id#0, user_id#1, vehicle_id#2, vehicle_type#3, start_station#4, end_station#5, city#6, status#7, duration_s#8, distance_km#9, battery_pct#10, price_mad#11, event_time#12, to_timestamp(event_time#12, None, TimestampType, Some(Etc/UTC), false) AS event_ts#26]
+   :     +- Relation [trip_id#0,user_id#1,vehicle_id#2,vehicle_type#3,start_station#4,end_station#5,city#6,status#7,duration_s#8,distance_km#9,battery_pct#10,price_mad#11,event_time#12] json
+   +- Project [station_id#42, district#45, zone_type#46, capacity#47]
+      +- Relation [station_id#42,name#43,city#44,district#45,zone_type#46,capacity#47,latitude#48,longitude#49] json
+
+== Optimized Logical Plan ==
+Aggregate [city#6, zone_type#46], [city#6, zone_type#46, count(1) AS nb_trajets#3961L]
++- Project [city#6, zone_type#46]
+   +- Join LeftOuter, (start_station#4 = station_id#42)
+      :- Project [start_station#4, city#6]
+      :  +- Filter (isnotnull(status#7) AND (status#7 = ENDED))
+      :     +- Relation [trip_id#0,user_id#1,vehicle_id#2,vehicle_type#3,start_station#4,end_station#5,city#6,status#7,duration_s#8,distance_km#9,battery_pct#10,price_mad#11,event_time#12] json
+      +- Project [station_id#42, zone_type#46]
+         +- Filter isnotnull(station_id#42)
+            +- Relation [station_id#42,name#43,city#44,district#45,zone_type#46,capacity#47,latitude#48,longitude#49] json
+
+== Physical Plan ==
+AdaptiveSparkPlan isFinalPlan=false
++- HashAggregate(keys=[city#6, zone_type#46], functions=[count(1)], output=[city#6, zone_type#46, nb_trajets#3961L])
+   +- Exchange hashpartitioning(city#6, zone_type#46, 4), ENSURE_REQUIREMENTS, [plan_id=1152]
+      +- HashAggregate(keys=[city#6, zone_type#46], functions=[partial_count(1)], output=[city#6, zone_type#46, count#3966L])
+         +- Project [city#6, zone_type#46]
+            +- BroadcastHashJoin [start_station#4], [station_id#42], LeftOuter, BuildRight, false
+               :- Project [start_station#4, city#6]
+               :  +- Filter (isnotnull(status#7) AND (status#7 = ENDED))
+               :     +- FileScan json [start_station#4,city#6,status#7] Batched: false, DataFilters: [isnotnull(status#7), (status#7 = ENDED)], Format: JSON, Location: InMemoryFileIndex(1 paths)[s3a://lake/bronze/history/trips_history.jsonl], PartitionFilters: [], PushedFilters: [IsNotNull(status), EqualTo(status,ENDED)], ReadSchema: struct<start_station:string,city:string,status:string>
+               +- BroadcastExchange HashedRelationBroadcastMode(List(input[0, string, false]),false), [plan_id=1147]
+                  +- Filter isnotnull(station_id#42)
+                     +- FileScan json [station_id#42,zone_type#46] Batched: false, DataFilters: [isnotnull(station_id#42)], Format: JSON, Location: InMemoryFileIndex(1 paths)[file:/opt/pedali/data/stations.json], PartitionFilters: [], PushedFilters: [IsNotNull(station_id)], ReadSchema: struct<station_id:string,zone_type:string>
+
+(plan complet enregistré dans /tmp/p3_explain_sp4.txt)
+
+Temps mesurés (Partie 3) - à comparer avec la Partie 2 (RDD) dans le rapport
+    9.02 s  count(raw)
+    5.41 s  count(ended)
+    1.33 s  CA par ville (DataFrame)
+    1.24 s  CA par ville (SQL)
+    1.34 s  Durée moyenne ville x véhicule (DataFrame)
+    1.03 s  Top 5 stations (DataFrame)
+    1.99 s  Jointure + agrégat par zone
+    2.51 s  Répartition trip_band (UDF Python)
+    0.61 s  Répartition trip_band (when/otherwise)
+    8.92 s  Écriture Silver Parquet (partitionBy city)
+NB : la 1re action inclut le démarrage des executors et la 1re lecture S3.
+
+Spark UI sur http://localhost:4040 - captures DAG / SQL, puis Entrée pour terminer...

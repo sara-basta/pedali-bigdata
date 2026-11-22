@@ -1,0 +1,55 @@
+============================================================
+[ 10.34 s] count(raw)
+Lignes lues         : 51000
+[  7.38 s] count(ended)
+Trajets ENDED       : 14370
+[  0.74 s] CA par ville
+
+Chiffre d'affaires par ville (MAD)
+  Casablanca     192,559.97
+  Marrakech       83,975.32
+  Rabat           86,641.49
+  Tanger          66,386.47
+[  0.66 s] Durée moyenne par ville et véhicule
+
+Durée moyenne d'un trajet (secondes)
+  Casablanca   BIKE       1154.2
+  Casablanca   EBIKE      1151.5
+  Casablanca   SCOOTER    1143.9
+  Marrakech    BIKE       1101.7
+  Marrakech    EBIKE      1163.1
+  Marrakech    SCOOTER    1135.1
+  Rabat        BIKE       1147.8
+  Rabat        EBIKE      1142.3
+  Rabat        SCOOTER    1125.3
+  Tanger       BIKE       1190.1
+  Tanger       EBIKE      1178.2
+  Tanger       SCOOTER    1142.6
+[  0.68 s] Top 5 stations
+
+Top 5 des stations de départ
+  S-CAS-001       269 trajets
+  S-CAS-003       250 trajets
+  S-CAS-002       238 trajets
+  S-CAS-004       232 trajets
+  S-CAS-005       232 trajets
+
+Lineage (toDebugString) du RDD du chiffre d'affaires :
+(2) PythonRDD[13] at collect at /opt/pedali/notebooks/p2_rdd.py:59 []
+ |  MapPartitionsRDD[12] at mapPartitions at PythonRDD.scala:160 []
+ |  ShuffledRDD[11] at partitionBy at NativeMethodAccessorImpl.java:0 []
+ +-(2) PairwiseRDD[10] at reduceByKey at /opt/pedali/notebooks/p2_rdd.py:58 []
+    |  PythonRDD[9] at reduceByKey at /opt/pedali/notebooks/p2_rdd.py:58 []
+    |  PythonRDD[6] at RDD at PythonRDD.scala:53 []
+    |      CachedPartitions: 2; MemorySize: 1068.5 KiB; DiskSize: 0.0 B
+    |  MapPartitionsRDD[5] at mapPartitions at PythonRDD.scala:160 []
+    |  ShuffledRDD[4] at partitionBy at NativeMethodAccessorImpl.java:0 []
+    +-(2) PairwiseRDD[3] at reduceByKey at /opt/pedali/notebooks/p2_rdd.py:48 []
+       |  PythonRDD[2] at reduceByKey at /opt/pedali/notebooks/p2_rdd.py:48 []
+       |  s3a://lake/bronze/history/trips_history.jsonl MapPartitionsRDD[1] at textFile at NativeMethodAccessorImpl.java:0 []
+       |  s3a://lake/bronze/history/trips_history.jsonl HadoopRDD[0] at textFile at NativeMethodAccessorImpl.java:0 []
+
+Transformations (lazy) : flatMap, filter, map, reduceByKey, aggregateByKey, mapValues, cache
+Actions (déclenchent un job) : count, collect, takeOrdered
+
+Spark UI sur http://localhost:4040 - capture du DAG, puis Entrée pour terminer...
